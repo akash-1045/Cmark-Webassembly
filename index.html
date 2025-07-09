@@ -4,37 +4,55 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Markdown WASM Preview</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.5/lib/codemirror.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.8.1/github-markdown.min.css"/>
+
   <style>
-    body { display: flex; height: 100vh; margin: 0; }
+    html, body {
+      height: 100%;
+      margin: 0;
+    }
+    body {
+      display: flex;
+      font-family: sans-serif;
+    }
     #editor, #preview {
       flex: 1;
-      padding: 10px;
       overflow: auto;
     }
+    #editor .CodeMirror {
+      height: 100%;
+    }
     #preview {
-      background: #f9f9f9;
-      border-left: 1px solid #ccc;
+      border-left: 1px solid #ddd;
+      background: #fff;
+    }
+    .markdown-body {
+      padding: 20px;
+      box-sizing: border-box;
+      background: #fff;
+      color: #000;
     }
   </style>
 </head>
 <body>
   <div id="editor"></div>
-  <div id="preview"></div>
+  <div id="preview" class="markdown-body"></div>
 
   <script src="https://unpkg.com/codemirror@5.65.5/lib/codemirror.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/codemirror@5.65.5/lib/codemirror.css">
   <script src="https://unpkg.com/codemirror@5.65.5/mode/markdown/markdown.js"></script>
 
   <script src="./cmark.js"></script>
+
   <script>
     const editor = CodeMirror(document.getElementById("editor"), {
       mode: "markdown",
       lineNumbers: true,
-      value: "# Hello Markdown\n\nType on the left...",
+      value: `# Hello Markdown\n\nType on the left...`,
     });
 
     const preview = document.getElementById("preview");
-
     let cmarkModule;
     (async () => {
       cmarkModule = await window.createCmarkModule();
@@ -44,11 +62,14 @@
     function updatePreview() {
       if (!cmarkModule) return;
 
-      const input = editor.getValue();
-      const inputPtr = cmarkModule._malloc(input.length + 1);
-      cmarkModule.stringToUTF8(input, inputPtr, input.length + 1);
+      let input = editor.getValue();
+      if (!input.endsWith('\n')) input += '\n';
 
-      const outputPtr = cmarkModule._wasm_markdown_to_html(inputPtr, input.length, 0);
+      const inputLength = cmarkModule.lengthBytesUTF8(input) + 1;
+      const inputPtr = cmarkModule._malloc(inputLength);
+
+      cmarkModule.stringToUTF8(input, inputPtr, inputLength);
+      const outputPtr = cmarkModule._wasm_markdown_to_html(inputPtr, inputLength - 1, 0);
       const output = cmarkModule.UTF8ToString(outputPtr);
 
       preview.innerHTML = output;

@@ -17,7 +17,7 @@ emcc \
   cmark_wrapper.c \
   -I./cmark/src -I./cmark/build/src \
   -sEXPORTED_FUNCTIONS='["_wasm_markdown_to_html", "_malloc", "_free"]' \
-  -sEXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "UTF8ToString", "stringToUTF8"]' \
+  -sEXPORTED_RUNTIME_METHODS='["ccall", "cwrap", "UTF8ToString", "stringToUTF8", "lengthBytesUTF8"]' \
   -sENVIRONMENT=web \
   -sMODULARIZE \
   -sEXPORT_NAME="createCmarkModule" \
